@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}HR Dashboard - Bảng Điều Khiển Tuyển Dụng AI{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Recruiter Welcome Header -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-xl shadow-slate-200 mb-8 relative overflow-hidden border border-slate-800">
+        <div class="relative z-10 max-w-2xl">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-3">
+                🏢 Không gian Nhà Tuyển Dụng (HR)
+            </span>
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">
+                {{ user.company_name|default:"Trung Tâm Tuyển Dụng" }}
+            </h1>
+            <p class="mt-2 text-slate-300 text-sm sm:text-base leading-relaxed">
+                Chào mừng HR <strong>{{ user.get_full_name|default:user.username }}</strong>! Quản lý các chiến dịch tuyển dụng, theo dõi bảng xếp hạng ứng viên tự động bằng AI và xem báo cáo Explainable AI (XAI) minh bạch.
+            </p>
+        </div>
+        <!-- Decorative Glow -->
+        <div class="absolute right-0 top-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+    </div>
+
+    <!-- Quick Analytics Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="text-xs font-semibold uppercase text-slate-400">Tin tuyển dụng (JD)</div>
+            <div class="text-2xl font-black text-slate-900 mt-1">3</div>
+            <div class="text-xs text-emerald-600 mt-1 font-medium">Đang hoạt động</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="text-xs font-semibold uppercase text-slate-400">Hồ sơ đã tiếp nhận</div>
+            <div class="text-2xl font-black text-indigo-600 mt-1">28</div>
+            <div class="text-xs text-slate-500 mt-1 font-medium">Từ các ứng viên</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="text-xs font-semibold uppercase text-slate-400">AI Đã Sàng Lọc</div>
+            <div class="text-2xl font-black text-violet-600 mt-1">100%</div>
+            <div class="text-xs text-slate-500 mt-1 font-medium">Sentence-BERT & Regex</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="text-xs font-semibold uppercase text-slate-400">Độ khớp cao (>= 75%)</div>
+            <div class="text-2xl font-black text-emerald-600 mt-1">12</div>
+            <div class="text-xs text-slate-500 mt-1 font-medium">Ứng viên tiềm năng</div>
+        </div>
+    </div>
+
+    <!-- Active JDs and AI Ranking Demo Section -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+            <div>
+                <h2 class="text-lg font-bold text-slate-900">Danh Sách Tin Tuyển Dụng & Xếp Hạng Ứng Viên AI</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Hệ thống áp dụng công thức 4 trọng số: Kỹ năng (35%), Ngữ nghĩa (25%), Kinh nghiệm (25%), Học vấn (15%)</p>
+            </div>
+            <button class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm transition">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Tạo Tin Tuyển Dụng Mới (Sprint tới)
+            </button>
+        </div>
+
+        <div class="mt-6 text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+            <div class="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800">Sẵn sàng kết nối Module AI Trích xuất & Chấm điểm CV</h3>
+            <p class="text-xs text-slate-500 max-w-md mx-auto mt-1">
+                Tài khoản HR của bạn đã được xác thực thành công. Các chức năng tải CV, bóc tách kỹ năng tự động và xem bảng xếp hạng XAI sẽ được tích hợp trong các Sprint tiếp theo.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% load l10n %}
+
+{% block title %}Chi Tiết Hồ Sơ Ứng Tuyển #{{ application.pk }} - AI Recruiter{% endblock %}
+
+{% block header_title %}Báo Cáo Đánh Giá AI Chi Tiết #{{ application.pk }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Breadcrumb -->
+    <div class="flex items-center space-x-2 text-xs text-slate-500 mb-6">
+        <a href="{% url 'jobs:job_list' %}" class="hover:text-indigo-600 transition">Sàn việc làm</a>
+        <span>/</span>
+        <a href="{% url 'jobs:job_detail' application.job.pk %}" class="hover:text-indigo-600 transition">{{ application.job.title }}</a>
+        <span>/</span>
+        <span class="text-slate-800 font-medium">Chi tiết hồ sơ #{{ application.pk }}</span>
+    </div>
+
+    <!-- Application Overview Header -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+            <div>
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
+                        {% if application.status == 'accepted' %} bg-emerald-50 text-emerald-700 border border-emerald-200
+                        {% elif application.status == 'rejected' %} bg-rose-50 text-rose-700 border border-rose-200
+                        {% elif application.status == 'reviewed' %} bg-blue-50 text-blue-700 border border-blue-200
+                        {% else %} bg-amber-50 text-amber-700 border border-amber-200 {% endif %}">
+                        Trạng thái: {{ application.get_status_display }}
+                    </span>
+                    <span class="text-xs text-slate-400">
+                        Nộp lúc: {{ application.created_at|date:"d/m/Y - H:i" }}
+                    </span>
+                </div>
+                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">
+                    {{ application.candidate.get_full_name|default:application.candidate.username }}
+                </h1>
+                <p class="text-xs text-slate-500 mt-1">
+                    Email: <span class="text-slate-800 font-medium">{{ application.contact_email }}</span>
+                    {% if application.contact_phone %} • SĐT: <strong class="text-slate-800 font-medium">{{ application.contact_phone }}</strong>{% endif %}
+                    • Vị trí: <strong class="text-indigo-600">{{ application.job.title }}</strong> ({{ application.job.hr.company_name|default:application.job.hr.username }})
+                </p>
+            </div>
+
+            <!-- CV Download Button -->
+            <div>
+                {% if application.cv_file %}
+                    <a href="{{ application.cv_file.url }}" target="_blank" class="inline-flex items-center px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-sm transition">
+                        <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Tải xuống tệp CV gốc
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- MULTI-CRITERIA SCORE CARD (S_total) -->
+        <div class="mt-6 p-6 rounded-2xl bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-950 text-white shadow-lg">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-800">
+                <div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-2">
+                        🤖 AI Multi-Criteria Scoring Engine
+                    </span>
+                    <h2 class="text-xl sm:text-2xl font-black tracking-tight">
+                        Điểm Đánh Giá Mức Độ Phù Hợp: {{ application.total_score }}%
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">
+                        Áp dụng công thức chuẩn: <code class="text-indigo-300 font-mono">S_total = (0.35 × Skill) + (0.25 × Semantic S-BERT) + (0.25 × Exp) + (0.15 × Edu)</code>
+                    </p>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-slate-400 uppercase tracking-wider block font-medium">Xếp loại hồ sơ</span>
+                    <span class="text-lg font-bold 
+                        {% if application.total_score >= 80 %} text-emerald-400
+                        {% elif application.total_score >= 65 %} text-blue-400
+                        {% elif application.total_score >= 50 %} text-amber-400
+                        {% else %} text-rose-400 {% endif %}">
+                        {% if application.total_score >= 80 %}🌟 Xuất sắc (Highly Recommended)
+                        {% elif application.total_score >= 65 %}✓ Tiềm năng (Recommended)
+                        {% elif application.total_score >= 50 %}⏳ Xem xét (Consider)
+                        {% else %}⚠️ Chưa phù hợp (Low Match){% endif %}
+                    </span>
+                </div>
+            </div>
+
+            {% if application.keyword_stuffing_flag %}
+            <div class="mt-4 p-3.5 rounded-xl bg-amber-500/20 border border-amber-400/30 flex items-start space-x-3">
+                <span class="text-xl">⚠️</span>
+                <div class="text-xs">
+                    <strong class="text-amber-200 block text-sm">Cảnh báo: Phát hiện dấu hiệu nhồi từ khóa (Keyword Stuffing)!</strong>
+                    <span class="text-amber-300/90">
+                        CV này có mật độ kỹ năng cao bất thường kết hợp với điểm tương đồng ngữ nghĩa thấp. Hệ thống đã tự động áp dụng hệ số phạt (Penalty factor 0.7) lên điểm kỹ năng để đảm bảo tính công bằng và chính xác.
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 4 Criteria Progress Breakdown -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                <!-- 1. Skill Score -->
+                <div class="p-3.5 rounded-xl bg-white/5 border border-white/10">
+                    <div class="flex justify-between items-center text-xs mb-1.5">
+                        <span class="text-slate-300 font-medium">1. Kỹ năng (35%)</span>
+                        <span class="font-mono font-bold text-indigo-300">{{ application.skill_score }}%</span>
+                    </div>
+                    <div class="w-full bg-white/10 rounded-full h-2">
+                        <div class="bg-indigo-400 h-2 rounded-full transition-all duration-500" style="width: {{ application.skill_score|unlocalize }}%"></div>
+                    </div>
+                </div>
+
+                <!-- 2. Semantic Score -->
+                <div class="p-3.5 rounded-xl bg-white/5 border border-white/10">
+                    <div class="flex justify-between items-center text-xs mb-1.5">
+                        <span class="text-slate-300 font-medium">2. Ngữ nghĩa S-BERT (25%)</span>
+                        <span class="font-mono font-bold text-violet-300">{{ application.semantic_score }}%</span>
+                    </div>
+                    <div class="w-full bg-white/10 rounded-full h-2">
+                        <div class="bg-violet-400 h-2 rounded-full transition-all duration-500" style="width: {{ application.semantic_score|unlocalize }}%"></div>
+                    </div>
+                </div>
+
+                <!-- 3. Experience Score -->
+                <div class="p-3.5 rounded-xl bg-white/5 border border-white/10">
+                    <div class="flex justify-between items-center text-xs mb-1.5">
+                        <span class="text-slate-300 font-medium">3. Kinh nghiệm (25%)</span>
+                        <span class="font-mono font-bold text-emerald-300">{{ application.experience_score }}%</span>
+                    </div>
+                    <div class="w-full bg-white/10 rounded-full h-2">
+                        <div class="bg-emerald-400 h-2 rounded-full transition-all duration-500" style="width: {{ application.experience_score|unlocalize }}%"></div>
+                    </div>
+                </div>
+
+                <!-- 4. Education Score -->
+                <div class="p-3.5 rounded-xl bg-white/5 border border-white/10">
+                    <div class="flex justify-between items-center text-xs mb-1.5">
+                        <span class="text-slate-300 font-medium">4. Học vấn (15%)</span>
+                        <span class="font-mono font-bold text-amber-300">{{ application.education_score }}%</span>
+                    </div>
+                    <div class="w-full bg-white/10 rounded-full h-2">
+                        <div class="bg-amber-400 h-2 rounded-full transition-all duration-500" style="width: {{ application.education_score|unlocalize }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric Badges -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+            <div class="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100">
+                <span class="block text-[11px] uppercase font-bold text-emerald-800">Kỹ năng đã khớp (Matched)</span>
+                <span class="text-2xl font-black text-emerald-600 mt-1 block">{{ matched_skills|length }}</span>
+                <span class="text-[11px] text-emerald-700/80">Trùng khớp với yêu cầu của JD</span>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-100">
+                <span class="block text-[11px] uppercase font-bold text-amber-800">Kỹ năng còn thiếu (Missing)</span>
+                <span class="text-2xl font-black text-amber-600 mt-1 block">{{ missing_skills|length }}</span>
+                <span class="text-[11px] text-amber-700/80">JD yêu cầu nhưng CV chưa có</span>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100">
+                <span class="block text-[11px] uppercase font-bold text-indigo-800">Tổng kỹ năng bóc tách</span>
+                <span class="text-2xl font-black text-indigo-600 mt-1 block">{{ application.extracted_skills|length }}</span>
+                <span class="text-[11px] text-indigo-700/80">Trích xuất qua Regex & Taxonomy</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Skill Analysis Report (Explainable AI - XAI) -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm mb-8">
+        <h2 class="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            Báo Cáo Phân Tích Kỹ Năng Bằng AI (Explainable AI)
+        </h2>
+        <p class="text-xs text-slate-500 mb-6">
+            Báo cáo minh bạch so sánh tập kỹ năng trong CV của ứng viên với yêu cầu của JD.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- Matched Skills -->
+            <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1.5 mb-3">
+                    <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                    Kỹ năng đã khớp (Matched Skills)
+                </h3>
+                <div class="flex flex-wrap gap-1.5">
+                    {% for skill in matched_skills %}
+                        <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-mono font-semibold border border-emerald-200">
+                            ✓ {{ skill }}
+                        </span>
+                    {% empty %}
+                        <span class="text-xs text-slate-400 italic">Chưa phát hiện kỹ năng nào khớp với JD.</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Missing Skills -->
+            <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-amber-700 flex items-center gap-1.5 mb-3">
+                    <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                    Kỹ năng còn thiếu (Missing Skills)
+                </h3>
+                <div class="flex flex-wrap gap-1.5">
+                    {% for skill in missing_skills %}
+                        <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 text-xs font-mono font-semibold border border-amber-200">
+                            ✗ {{ skill }}
+                        </span>
+                    {% empty %}
+                        <span class="text-xs text-emerald-600 font-semibold">Tuyệt vời! Ứng viên đáp ứng 100% kỹ năng yêu cầu.</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- All Extracted Skills -->
+        <div class="p-5 rounded-2xl bg-indigo-50/40 border border-indigo-100">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-900 mb-2">
+                Tất cả kỹ năng AI Extractor phát hiện được trong CV:
+            </h3>
+            <div class="flex flex-wrap gap-1.5">
+                {% for skill in application.extracted_skills %}
+                    <span class="px-2.5 py-1 rounded-lg bg-white text-indigo-700 text-xs font-mono font-medium border border-indigo-200 shadow-sm">
+                        {{ skill }}
+                    </span>
+                {% empty %}
+                    <span class="text-xs text-slate-400 italic">Không bóc tách được kỹ năng nào từ CV này.</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Parsed Raw Text Inspector (Kiểm tra dữ liệu bóc tách của Parser) -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h2 class="text-base font-bold text-slate-900">Văn Bản Thô Trích Xuất (AI Parser Output)</h2>
+                <p class="text-xs text-slate-500">Dữ liệu thô bóc tách từ file PDF/DOCX bởi module <code>ai_engine/parser.py</code></p>
+            </div>
+            <span class="text-xs font-mono text-slate-400">{{ application.parsed_text|length }} ký tự</span>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs max-h-96 overflow-y-auto whitespace-pre-line leading-relaxed border border-slate-800">
+            {{ application.parsed_text|default:"(Chưa có nội dung văn bản được trích xuất)" }}
+        </div>
+    </div>
+</div>
+{% endblock %}

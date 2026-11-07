@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% load l10n %}
+
+{% block title %}Hồ Sơ Đã Ứng Tuyển & Báo Cáo Tương Thích AI{% endblock %}
+
+{% block header_title %}Hồ Sơ Đã Ứng Tuyển & AI Feedback{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 mb-2">
+                🎓 Candidate Portal • Khu Vực Ứng Viên
+            </span>
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                Hồ Sơ Đã Ứng Tuyển & Đánh Giá AI
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                Theo dõi tiến độ xét duyệt, điểm tương thích cá nhân và gợi ý bổ sung kỹ năng để nâng cấp hồ sơ nghề nghiệp.
+            </p>
+        </div>
+
+        <div>
+            <a href="{% url 'jobs:job_list' %}" class="inline-flex items-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-md shadow-indigo-200 transition">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                Tìm Việc Làm Mới
+            </a>
+        </div>
+    </div>
+
+    <!-- Candidate Stats Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Việc đã nộp</span>
+                <div class="text-3xl font-black text-slate-900 mt-1">{{ total_count }}</div>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Đang chờ xét duyệt</span>
+                <div class="text-3xl font-black text-amber-500 mt-1">{{ pending_count }}</div>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Đã được chấp thuận</span>
+                <div class="text-3xl font-black text-emerald-600 mt-1">{{ accepted_count }}</div>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Điểm tương thích TB</span>
+                <div class="text-3xl font-black text-indigo-600 mt-1">{{ avg_match_score|unlocalize }}%</div>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Applications List -->
+    {% if applications %}
+        <div class="space-y-6">
+            <div class="flex items-center justify-between px-1">
+                <h2 class="text-base font-bold text-slate-900">Lịch Sử Nộp Hồ Sơ Của Bạn</h2>
+                <span class="text-xs text-slate-400">Tự động sắp xếp theo điểm tương thích cao nhất trước</span>
+            </div>
+
+            {% for app in applications %}
+                <div class="bg-white rounded-3xl border border-slate-200 hover:border-indigo-400 hover:shadow-md transition p-6 sm:p-7">
+                    <!-- Top Row: Title, Company, Status, Timestamp -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-slate-100">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h3 class="text-lg font-bold text-slate-900 hover:text-indigo-600 transition">
+                                    <a href="{% url 'jobs:job_detail' app.job.pk %}">{{ app.job.title }}</a>
+                                </h3>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold
+                                    {% if app.status == 'accepted' %} bg-emerald-100 text-emerald-800 border border-emerald-200
+                                    {% elif app.status == 'rejected' %} bg-rose-100 text-rose-800 border border-rose-200
+                                    {% elif app.status == 'reviewed' %} bg-blue-100 text-blue-800 border border-blue-200
+                                    {% else %} bg-amber-100 text-amber-800 border border-amber-200 {% endif %}">
+                                    {{ app.get_status_display }}
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1 font-medium">
+                                🏢 {{ app.job.hr.company_name|default:app.job.hr.username }} • 📍 {{ app.job.location }} • 💼 {{ app.job.job_type }}
+                            </p>
+                        </div>
+
+                        <div class="text-right sm:shrink-0 text-xs text-slate-400">
+                            <span>Thời gian nộp: <strong>{{ app.created_at|date:"d/m/Y H:i" }}</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- Middle Row: AI Score & Explainable AI (XAI) Breakdown -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 my-6">
+                        <!-- Score Display Card with Circular Gauge (Col 4) -->
+                        <div class="lg:col-span-4 bg-gradient-to-br from-slate-50 to-indigo-50/40 rounded-2xl p-5 border border-indigo-100 flex flex-col justify-between">
+                            <div>
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-3">
+                                    Mức Độ Tương Thích Với JD (Match Score)
+                                </span>
+
+                                <div class="flex items-center space-x-4 mb-4">
+                                    <!-- Radial / Circular SVG Progress Gauge -->
+                                    <div class="relative w-20 h-20 shrink-0 flex items-center justify-center">
+                                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                            <path class="text-slate-200" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                            <path class="{% if app.match_score >= 80 %}text-emerald-500{% elif app.match_score >= 65 %}text-indigo-600{% elif app.match_score >= 50 %}text-amber-500{% else %}text-rose-500{% endif %}"
+                                                  stroke-dasharray="{{ app.match_score|unlocalize }}, 100"
+                                                  stroke-width="3.5"
+                                                  stroke-linecap="round"
+                                                  stroke="currentColor"
+                                                  fill="none"
+                                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                        </svg>
+                                        <div class="absolute flex flex-col items-center justify-center text-center">
+                                            <span class="text-xs font-black text-slate-900 leading-none">{{ app.match_score|unlocalize }}%</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-bold inline-block mb-1
+                                            {% if app.match_score >= 80 %}bg-emerald-100 text-emerald-800
+                                            {% elif app.match_score >= 65 %}bg-indigo-100 text-indigo-800
+                                            {% elif app.match_score >= 50 %}bg-amber-100 text-amber-800
+                                            {% else %}bg-rose-100 text-rose-800{% endif %}">
+                                            {% if app.match_score >= 80 %}Xuất sắc (Top Tier)
+                                            {% elif app.match_score >= 65 %}Phù hợp tốt
+                                            {% elif app.match_score >= 50 %}Khá tiềm năng
+                                            {% else %}Cần cải thiện{% endif %}
+                                        </span>
+                                        <span class="block text-[11px] text-slate-500">Sentence-BERT & Multi-Criteria</span>
+                                    </div>
+                                </div>
+
+                                <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden mb-3">
+                                    <div class="h-full rounded-full transition-all duration-500 {% if app.match_score >= 80 %}bg-emerald-500{% elif app.match_score >= 65 %}bg-indigo-600{% elif app.match_score >= 50 %}bg-amber-500{% else %}bg-rose-500{% endif %}"
+                                         style="width: {{ app.match_score|unlocalize }}%;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Mini Criteria Breakdown -->
+                            <div class="grid grid-cols-2 gap-2 text-[11px] pt-3 border-t border-slate-200/60">
+                                <div><span class="text-slate-500">Kỹ năng:</span> <strong class="text-slate-800">{{ app.skill_score|unlocalize }}%</strong></div>
+                                <div><span class="text-slate-500">Ngữ nghĩa:</span> <strong class="text-slate-800">{{ app.semantic_score|unlocalize }}%</strong></div>
+                                <div><span class="text-slate-500">Kinh nghiệm:</span> <strong class="text-slate-800">{{ app.experience_score|unlocalize }}%</strong></div>
+                                <div><span class="text-slate-500">Học vấn:</span> <strong class="text-slate-800">{{ app.education_score|unlocalize }}%</strong></div>
+                            </div>
+                        </div>
+
+                        <!-- XAI Skills Comparison & Career Coach (Col 8) -->
+                        <div class="lg:col-span-8 flex flex-col justify-between space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <!-- Matched Skills (Green) -->
+                                <div class="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100">
+                                    <div class="flex items-center space-x-1.5 mb-2">
+                                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-800">
+                                            Kỹ năng bạn đã đáp ứng ({{ app.matched_skills|length }})
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        {% for skill in app.matched_skills %}
+                                            <span class="px-2.5 py-1 rounded-lg bg-white text-emerald-700 border border-emerald-200 text-xs font-bold shadow-xs">
+                                                ✓ {{ skill }}
+                                            </span>
+                                        {% empty %}
+                                            <span class="text-xs text-slate-400 italic">Chưa khớp kỹ năng trọng tâm nào</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <!-- Missing Skills (Red) -->
+                                <div class="p-4 rounded-2xl bg-rose-50/60 border border-rose-100">
+                                    <div class="flex items-center space-x-1.5 mb-2">
+                                        <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                        <span class="text-xs font-bold uppercase tracking-wider text-rose-800">
+                                            Kỹ năng còn thiếu trong CV ({{ app.missing_skills|length }})
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        {% for skill in app.missing_skills %}
+                                            <span class="px-2.5 py-1 rounded-lg bg-white text-rose-700 border border-rose-200 text-xs font-bold shadow-xs">
+                                                ✗ {{ skill }}
+                                            </span>
+                                        {% empty %}
+                                            <span class="text-xs text-emerald-700 font-bold">🎉 Hoàn hảo! Bạn không thiếu kỹ năng nào.</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- AI Career Coach Advice Box -->
+                            <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex items-start space-x-3">
+                                <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                </div>
+                                <div class="text-xs text-slate-700">
+                                    <strong class="text-indigo-900 block text-xs mb-0.5">Gợi ý từ AI Career Coach:</strong>
+                                    {% if app.missing_skills %}
+                                        Vị trí này đang tìm kiếm ứng viên thành thạo <strong>{{ app.missing_skills|slice:":3"|join:", " }}</strong>. Nếu bạn đã có kinh nghiệm về các kỹ năng này nhưng chưa ghi rõ trong file CV, hãy bổ sung vào bản CV tiếp theo để tăng điểm tương thích và thu hút sự chú ý của Nhà tuyển dụng!
+                                    {% else %}
+                                        Hồ sơ của bạn rất ấn tượng và khớp hoàn toàn các kỹ năng nhà tuyển dụng yêu cầu. Hãy chuẩn bị kỹ lưỡng cho vòng phỏng vấn chuyên môn!
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Action Buttons -->
+                    <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex items-center space-x-2">
+                            {% if app.cv_file %}
+                                <a href="{{ app.cv_file.url }}" target="_blank" class="inline-flex items-center px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+                                    <svg class="w-3.5 h-3.5 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    Xem CV Đã Tải Lên
+                                </a>
+                            {% endif %}
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <a href="{% url 'jobs:job_detail' app.job.pk %}" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition">
+                                Xem Lại Bài Tuyển Dụng (JD)
+                            </a>
+                            <a href="{% url 'jobs:application_detail' app.pk %}" class="inline-flex items-center px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-sm">
+                                Xem Báo Cáo AI Chi Tiết
+                                <svg class="w-3.5 h-3.5 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-16 bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+            <div class="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800">Bạn chưa ứng tuyển vị trí nào</h3>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-5">
+                Hãy khám phá các bài đăng tuyển dụng trên Sàn việc làm và nộp CV để nhận báo cáo phân tích kỹ năng và điểm tương thích từ AI.
+            </p>
+            <a href="{% url 'jobs:job_list' %}" class="inline-flex items-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-md transition">
+                Khám phá Sàn việc làm ngay
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

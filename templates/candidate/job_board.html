@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Sàn Việc Làm - AI Candidate Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Welcome Header -->
+    <div class="bg-gradient-to-r from-indigo-700 via-indigo-600 to-violet-600 rounded-3xl p-8 sm:p-10 text-white shadow-xl shadow-indigo-100 mb-8 relative overflow-hidden">
+        <div class="relative z-10 max-w-2xl">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white backdrop-blur mb-3">
+                🎓 Không gian Ứng Viên
+            </span>
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">
+                Xin chào, {{ user.get_full_name|default:user.username }}!
+            </h1>
+            <p class="mt-2 text-indigo-100 text-sm sm:text-base leading-relaxed">
+                Khám phá các vị trí tuyển dụng phù hợp nhất với hồ sơ năng lực của bạn. Hệ thống AI sẽ tự động phân tích CV, trích xuất kỹ năng và đo lường độ tương đồng ngữ nghĩa qua Sentence-BERT.
+            </p>
+        </div>
+        <!-- Decorative Background Circle -->
+        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+    </div>
+
+    <!-- Search & Filter Bar (Candidate) -->
+    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-8 flex flex-col sm:flex-row gap-4">
+        <div class="flex-1 relative">
+            <input type="text" placeholder="Tìm kiếm theo vị trí, kỹ năng (Python, React, Machine Learning...)" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+            <svg class="w-5 h-5 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+        </div>
+        <button class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl transition">
+            Tìm việc làm
+        </button>
+    </div>
+
+    <!-- Demonstration Job Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Mock Job 1 -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 hover:border-indigo-500 hover:shadow-md transition duration-200">
+            <div class="flex items-center justify-between mb-4">
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Toàn thời gian</span>
+                <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">AI Match: Sắp mở</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Senior AI Engineer</h3>
+            <p class="text-xs text-slate-500 mb-4 font-medium">VinTech Solution • Hà Nội / Remote</p>
+            <div class="flex flex-wrap gap-1.5 mb-5">
+                <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-md font-mono">Python</span>
+                <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-md font-mono">PyTorch</span>
+                <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-md font-mono">BERT / NLP</span>
+            </div>
+            <button class="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white text-xs font-semibold transition">
+                Ứng tuyển với CV của bạn
+            </button>
+        </div>
+
+        <!-- Mock Job 2 -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 hover:border-indigo-500 hover:shadow-md transition duration-200">
+            <div class="flex items-center justify-between mb-4">
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Hybrid</span>
+                <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">AI Match: Sắp mở</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Fullstack Django & React Developer</h3>
+            <p class="text-xs text-slate-500 mb-4 font-medium">FPT Software • TP. Hồ Chí Minh</p>
+            <div class="flex flex-wrap gap-1.5 mb-5">
+                <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-md font-mono">Django</span>
+                <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-md font-mono">MySQL</span>
+                <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-md font-mono">Tailwind</span>
+            </div>
+            <button class="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white text-xs font-semibold transition">
+                Ứng tuyển với CV của bạn
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

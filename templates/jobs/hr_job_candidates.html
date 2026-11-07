@@ -1,0 +1,607 @@
+{% extends 'base.html' %}
+{% load l10n %}
+
+{% block title %}Bảng Xếp Hạng Ứng Viên AI - {{ job.title }}{% endblock %}
+
+{% block header_title %}Bảng Xếp Hạng Ứng Viên AI (Candidate Ranking){% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center space-x-2 text-xs text-slate-500 mb-6">
+        <a href="{% url 'jobs:hr_dashboard' %}" class="hover:text-indigo-600 font-medium">Bảng điều khiển HR</a>
+        <span>/</span>
+        <a href="{% url 'jobs:job_detail' job.pk %}" class="hover:text-indigo-600 font-medium line-clamp-1">{{ job.title }}</a>
+        <span>/</span>
+        <span class="text-slate-800 font-semibold">Bảng Xếp Hạng Ứng Viên AI</span>
+    </nav>
+
+    <!-- Header Section -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 mb-8 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div>
+                <div class="flex flex-wrap items-center gap-2 mb-3">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700 border border-indigo-200">
+                        ⚡ AI Screener & Ranking
+                    </span>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {% if job.is_active %}bg-emerald-100 text-emerald-700 border border-emerald-200{% else %}bg-slate-100 text-slate-600{% endif %}">
+                        {% if job.is_active %}● Đang tuyển dụng{% else %}○ Tạm ẩn{% endif %}
+                    </span>
+                    <span class="text-xs text-slate-500 font-medium">
+                        Đăng ngày: {{ job.created_at|date:"d/m/Y" }}
+                    </span>
+                </div>
+
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                    {{ job.title }}
+                </h1>
+
+                <div class="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-slate-600 mt-2">
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 mr-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        {{ job.location }}
+                    </span>
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 mr-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        Yêu cầu kinh nghiệm: <strong>{% if job.min_experience == 0 %}Fresher{% else %}{{ job.min_experience }} năm{% endif %}</strong>
+                    </span>
+                    <span class="flex items-center text-emerald-600 font-semibold">
+                        <svg class="w-4 h-4 mr-1 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        {{ job.salary_range }}
+                    </span>
+                </div>
+
+                <!-- Required skills list in JD -->
+                <div class="mt-4 flex items-center flex-wrap gap-1.5">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400 mr-1">Kỹ năng JD yêu cầu:</span>
+                    {% for skill in job.get_skills_list %}
+                        <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200">
+                            {{ skill }}
+                        </span>
+                    {% empty %}
+                        <span class="text-xs text-slate-400 italic">Không có kỹ năng cụ thể</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap lg:flex-col gap-2.5 shrink-0">
+                <button onclick="openUploadModal()" class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-200 transition">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    Tải Lên Hàng Loạt CV
+                </button>
+                <a href="{% url 'jobs:hr_export_candidates_csv' job.pk %}" class="inline-flex items-center justify-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-200 transition">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Xuất CSV
+                </a>
+                <a href="{% url 'jobs:hr_export_candidates_xlsx' job.pk %}" class="inline-flex items-center justify-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl shadow-md shadow-teal-200 transition">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Xuất Excel (.xlsx)
+                </a>
+                <a href="{% url 'jobs:job_detail' job.pk %}" class="inline-flex items-center justify-center px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
+                    <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    Xem Trang Tuyển Dụng (JD)
+                </a>
+                <a href="{% url 'jobs:job_update' job.pk %}" class="inline-flex items-center justify-center px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
+                    <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    Chỉnh Sửa Tin Tuyển
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Tổng ứng viên đã nộp</span>
+            <div class="flex items-baseline space-x-2 mt-1">
+                <span class="text-3xl font-black text-slate-900">{{ total_candidates }}</span>
+                <span class="text-xs text-slate-500">hồ sơ</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Điểm cao nhất (Top 1)</span>
+            <div class="flex items-baseline space-x-2 mt-1">
+                <span class="text-3xl font-black text-indigo-600">{{ top_score|unlocalize }}%</span>
+                <span class="text-xs text-indigo-500 font-semibold">Match Score</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Điểm trung bình</span>
+            <div class="flex items-baseline space-x-2 mt-1">
+                <span class="text-3xl font-black text-emerald-600">{{ avg_score|unlocalize }}%</span>
+                <span class="text-xs text-emerald-500 font-semibold">Trung bình</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Độ tương thích cao (≥70%)</span>
+            <div class="flex items-baseline space-x-2 mt-1">
+                <span class="text-3xl font-black text-purple-600">{{ high_match_count }}</span>
+                <span class="text-xs text-purple-500 font-semibold">Ứng viên tiềm năng</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-6">
+        <form method="GET" class="flex flex-col md:flex-row items-center gap-3">
+            <div class="relative flex-1 w-full">
+                <input type="text" name="q" value="{{ query }}" placeholder="Tìm ứng viên theo tên, email, kỹ năng..."
+                       class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+
+            <div class="flex items-center gap-2 w-full md:w-auto">
+                <select name="tier" class="w-1/2 md:w-auto px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">Tất cả phân hạng điểm</option>
+                    <option value="excellent" {% if tier_filter == 'excellent' %}selected{% endif %}>Xuất sắc (≥ 80%)</option>
+                    <option value="good" {% if tier_filter == 'good' %}selected{% endif %}>Phù hợp cao (65% - 79%)</option>
+                    <option value="potential" {% if tier_filter == 'potential' %}selected{% endif %}>Tiềm năng (50% - 64%)</option>
+                    <option value="low" {% if tier_filter == 'low' %}selected{% endif %}>Cần cân nhắc (&lt; 50%)</option>
+                </select>
+
+                <select name="status" class="w-1/2 md:w-auto px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Chờ duyệt (Pending)</option>
+                    <option value="reviewed" {% if status_filter == 'reviewed' %}selected{% endif %}>Đã xem (Reviewed)</option>
+                    <option value="accepted" {% if status_filter == 'accepted' %}selected{% endif %}>Chấp thuận (Accepted)</option>
+                    <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Từ chối (Rejected)</option>
+                </select>
+
+                <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition shadow-sm shrink-0">
+                    Lọc hồ sơ
+                </button>
+
+                {% if query or status_filter or tier_filter %}
+                    <a href="{% url 'jobs:hr_job_candidates' job.pk %}" class="px-3 py-2 text-xs text-slate-500 hover:text-slate-700 font-medium shrink-0">
+                        Đặt lại
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Ranked Candidates Section -->
+    <div class="space-y-4">
+        <!-- Master Selection & Bulk Actions Toolbar -->
+        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 border border-indigo-900/50">
+            <div class="flex flex-wrap items-center gap-3">
+                <label class="inline-flex items-center space-x-2 cursor-pointer bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-xl border border-white/10 transition">
+                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" class="w-4 h-4 rounded text-indigo-500 focus:ring-indigo-400 border-slate-600 bg-slate-800">
+                    <span class="text-xs font-semibold text-slate-200">Chọn tất cả</span>
+                </label>
+
+                <!-- Quick Selection Filters -->
+                <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="selectTopN(3)" class="px-2.5 py-1 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 text-xs font-semibold border border-indigo-500/30 transition">
+                        🎯 Chọn Top 3
+                    </button>
+                    <button type="button" onclick="selectHighMatch()" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-semibold border border-emerald-500/30 transition">
+                        🌟 Chọn điểm ≥70%
+                    </button>
+                    <button type="button" onclick="deselectAll()" class="px-2 py-1 text-xs text-slate-400 hover:text-slate-200 transition">
+                        Bỏ chọn
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bulk Action Form -->
+            <form id="bulkActionForm" method="POST" action="{% url 'jobs:hr_batch_update_status' job.pk %}" onsubmit="return submitBulkAction(this)" class="flex items-center gap-2">
+                {% csrf_token %}
+                <div id="bulkHiddenInputs"></div>
+                <span class="text-xs text-slate-300 font-medium whitespace-nowrap">
+                    Đã chọn: <strong id="selectedCountBadge" class="text-indigo-400 font-bold font-mono">0</strong> hồ sơ
+                </span>
+
+                <select name="new_status" id="bulkStatusSelect" class="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="accepted">✓ Chấp thuận hàng loạt</option>
+                    <option value="reviewed">👀 Đánh dấu đã xem</option>
+                    <option value="rejected">✗ Từ chối hàng loạt</option>
+                    <option value="pending">⏳ Đặt lại Chờ duyệt</option>
+                </select>
+
+                <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm transition whitespace-nowrap">
+                    Áp Dụng
+                </button>
+            </form>
+        </div>
+
+        <div class="flex items-center justify-between px-2">
+            <div class="flex items-center space-x-2">
+                <h2 class="text-base font-bold text-slate-900">Danh Sách Ứng Viên Xếp Hạng</h2>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    {{ filtered_count }} hồ sơ
+                </span>
+            </div>
+            <span class="text-xs text-slate-500 flex items-center">
+                <svg class="w-3.5 h-3.5 mr-1 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>
+                Tự động sắp xếp: <strong>Điểm phù hợp cao nhất (match_score ↓)</strong>
+            </span>
+        </div>
+
+        {% if applications %}
+            <div class="space-y-4">
+                {% for app in applications %}
+                    <div class="bg-white rounded-3xl border border-slate-200 hover:border-indigo-400 hover:shadow-lg transition duration-200 p-6 relative overflow-hidden candidate-row" data-id="{{ app.id }}" data-score="{{ app.match_score|unlocalize }}">
+                        <!-- Top Ranked Medal Accent -->
+                        {% if forloop.counter == 1 %}
+                            <div class="absolute top-0 right-0 bg-gradient-to-l from-amber-400 to-amber-500 text-white text-[11px] font-black px-4 py-1 rounded-bl-2xl shadow-sm flex items-center space-x-1">
+                                <span>🥇 TOP 1 KHUYẾN NGHỊ</span>
+                            </div>
+                        {% elif forloop.counter == 2 %}
+                            <div class="absolute top-0 right-0 bg-gradient-to-l from-slate-400 to-slate-500 text-white text-[11px] font-black px-4 py-1 rounded-bl-2xl shadow-sm flex items-center space-x-1">
+                                <span>🥈 TOP 2</span>
+                            </div>
+                        {% elif forloop.counter == 3 %}
+                            <div class="absolute top-0 right-0 bg-gradient-to-l from-amber-600 to-amber-700 text-white text-[11px] font-black px-4 py-1 rounded-bl-2xl shadow-sm flex items-center space-x-1">
+                                <span>🥉 TOP 3</span>
+                            </div>
+                        {% endif %}
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                            <!-- Candidate Bio & Rank Badge (Col 4) -->
+                            <div class="lg:col-span-4 flex items-start space-x-3">
+                                <!-- Row Selection Checkbox -->
+                                <div class="pt-1">
+                                    <input type="checkbox" name="selected_candidate" value="{{ app.id }}" data-score="{{ app.match_score|unlocalize }}" onchange="syncSelectedCount()" class="candidate-item-checkbox w-5 h-5 rounded-lg text-indigo-600 focus:ring-indigo-500 border-slate-300 transition cursor-pointer">
+                                </div>
+
+                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-lg flex items-center justify-center shrink-0 shadow-md">
+                                    {{ app.candidate.first_name|default:app.candidate.username|slice:":1"|upper }}
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-xs font-black text-slate-400">#{{ forloop.counter }}</span>
+                                        <h3 class="text-base font-bold text-slate-900 truncate">
+                                            {{ app.candidate.get_full_name|default:app.candidate.username }}
+                                        </h3>
+                                        {% if app.keyword_stuffing_flag %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0" title="Cảnh báo: CV có mật độ kỹ năng cao bất thường so với nội dung ngữ nghĩa">
+                                                ⚠️ Nhồi từ khóa
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="space-y-0.5 mt-1 text-xs text-slate-500">
+                                        <p class="truncate flex items-center">
+                                            <span class="mr-1">📧</span>
+                                            <span>{{ app.contact_email|default:"Chưa cập nhật email" }}</span>
+                                        </p>
+                                        {% if app.contact_phone %}
+                                            <p class="truncate flex items-center text-slate-600 font-medium">
+                                                <span class="mr-1">📞</span>
+                                                <span>{{ app.contact_phone }}</span>
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex items-center space-x-3 text-[11px] text-slate-400 mt-2">
+                                        <span>🕒 Nộp: {{ app.created_at|date:"d/m/Y H:i" }}</span>
+                                        {% if app.cv_file %}
+                                            <a href="{{ app.cv_file.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-800 font-semibold underline flex items-center">
+                                                <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                Tải CV gốc
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Match Score & Multi-Criteria Breakdown (Col 4) -->
+                            <div class="lg:col-span-4 bg-slate-50/90 rounded-2xl p-4 border border-slate-100">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold uppercase text-slate-500">Độ tương thích AI (Match Score)</span>
+                                    <span class="text-xl font-black {% if app.match_score >= 80 %}text-emerald-600{% elif app.match_score >= 65 %}text-indigo-600{% elif app.match_score >= 50 %}text-amber-600{% else %}text-rose-600{% endif %}">
+                                        {{ app.match_score|unlocalize }}%
+                                    </span>
+                                </div>
+
+                                <!-- Overall Progress Bar -->
+                                <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden mb-3">
+                                    <div class="h-full rounded-full transition-all duration-500 {% if app.match_score >= 80 %}bg-gradient-to-r from-emerald-500 to-teal-400{% elif app.match_score >= 65 %}bg-gradient-to-r from-indigo-500 to-purple-500{% elif app.match_score >= 50 %}bg-gradient-to-r from-amber-400 to-amber-500{% else %}bg-gradient-to-r from-rose-400 to-rose-500{% endif %}"
+                                         style="width: {{ app.match_score|unlocalize }}%;"></div>
+                                </div>
+
+                                <!-- 4 Sub-Scores Grid -->
+                                <div class="grid grid-cols-2 gap-2 text-[11px] pt-2 border-t border-slate-200/60">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-slate-500">Kỹ năng (35%):</span>
+                                        <span class="font-bold text-slate-700">{{ app.skill_score|unlocalize }}%</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-slate-500">Ngữ nghĩa (25%):</span>
+                                        <span class="font-bold text-slate-700">{{ app.semantic_score|unlocalize }}%</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-slate-500">Kinh nghiệm (25%):</span>
+                                        <span class="font-bold text-slate-700">{{ app.experience_score|unlocalize }}%</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-slate-500">Học vấn (15%):</span>
+                                        <span class="font-bold text-slate-700">{{ app.education_score|unlocalize }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Explainable AI (XAI) Badges & Quick Status (Col 4) -->
+                            <div class="lg:col-span-4 flex flex-col justify-between space-y-3">
+                                <!-- XAI Skills Comparison -->
+                                <div class="space-y-2">
+                                    <!-- Matched Skills (Green) -->
+                                    <div>
+                                        <div class="flex items-center space-x-1 mb-1">
+                                            <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Kỹ năng đã khớp ({{ app.matched_skills|length }}):</span>
+                                        </div>
+                                        <div class="flex flex-wrap gap-1">
+                                            {% for skill in app.matched_skills %}
+                                                <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                                                    ✓ {{ skill }}
+                                                </span>
+                                            {% empty %}
+                                                <span class="text-[10px] text-slate-400 italic">Chưa khớp kỹ năng trọng tâm nào</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Missing Skills (Red) -->
+                                    <div>
+                                        <div class="flex items-center space-x-1 mb-1">
+                                            <svg class="w-3 h-3 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-rose-600">Kỹ năng còn thiếu ({{ app.missing_skills|length }}):</span>
+                                        </div>
+                                        <div class="flex flex-wrap gap-1">
+                                            {% for skill in app.missing_skills %}
+                                                <span class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-semibold">
+                                                    ✗ {{ skill }}
+                                                </span>
+                                            {% empty %}
+                                                <span class="text-[10px] text-emerald-600 font-bold">Đáp ứng đầy đủ 100% kỹ năng yêu cầu!</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Status Control & Full Report Link -->
+                                <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                                    <!-- Status update dropdown form -->
+                                    <form method="POST" action="{% url 'jobs:application_update_status' app.pk %}" class="flex items-center space-x-1.5">
+                                        {% csrf_token %}
+                                        <select name="status" onchange="this.form.submit()" class="px-2.5 py-1 text-[11px] font-semibold rounded-lg border focus:outline-none focus:ring-1 focus:ring-indigo-500 transition
+                                            {% if app.status == 'accepted' %}bg-emerald-50 text-emerald-700 border-emerald-300
+                                            {% elif app.status == 'rejected' %}bg-rose-50 text-rose-700 border-rose-300
+                                            {% elif app.status == 'reviewed' %}bg-blue-50 text-blue-700 border-blue-300
+                                            {% else %}bg-amber-50 text-amber-700 border-amber-300{% endif %}">
+                                            <option value="pending" {% if app.status == 'pending' %}selected{% endif %}>Chờ duyệt</option>
+                                            <option value="reviewed" {% if app.status == 'reviewed' %}selected{% endif %}>Đã xem</option>
+                                            <option value="accepted" {% if app.status == 'accepted' %}selected{% endif %}>Chấp thuận</option>
+                                            <option value="rejected" {% if app.status == 'rejected' %}selected{% endif %}>Từ chối</option>
+                                        </select>
+                                    </form>
+
+                                    <!-- Link to full AI evaluation report -->
+                                    <a href="{% url 'jobs:application_detail' app.pk %}" class="inline-flex items-center px-3 py-1 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 text-[11px] font-bold rounded-lg transition shadow-xs">
+                                        Báo cáo AI chi tiết
+                                        <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-16 bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                <div class="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Chưa có ứng viên nào nộp hồ sơ</h3>
+                <p class="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-5">
+                    Hiện tại chưa có ứng viên nào nộp hồ sơ vào vị trí tuyển dụng này hoặc không có hồ sơ nào khớp với bộ lọc tìm kiếm.
+                </p>
+                {% if query or status_filter or tier_filter %}
+                    <a href="{% url 'jobs:hr_job_candidates' job.pk %}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition shadow-sm">
+                        Xóa bộ lọc tìm kiếm
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- BATCH UPLOAD MODAL -->
+<div id="batchUploadModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4 transition-opacity duration-200">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-slate-200 shadow-2xl relative">
+        <!-- Close Button -->
+        <button type="button" onclick="closeUploadModal()" class="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+
+        <div class="flex items-center space-x-3 mb-4">
+            <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-slate-900">Tải Lên Hàng Loạt CV</h3>
+                <p class="text-xs text-slate-500">Chấm điểm & Xếp hạng AI tự động</p>
+            </div>
+        </div>
+
+        <form method="POST" action="{% url 'jobs:hr_batch_upload_cvs' job.pk %}" enctype="multipart/form-data" class="space-y-4" onsubmit="return handleBatchUploadSubmit(this)">
+            {% csrf_token %}
+            
+            <div class="border-2 border-dashed border-indigo-200 hover:border-indigo-500 rounded-2xl p-6 text-center bg-indigo-50/40 hover:bg-indigo-50/70 transition cursor-pointer" onclick="document.getElementById('batchFileInput').click()">
+                <svg class="w-10 h-10 text-indigo-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                <p class="text-xs font-bold text-indigo-900">Nhấp để chọn hoặc kéo thả nhiều tệp CV vào đây</p>
+                <p class="text-[11px] text-slate-500 mt-1">Hỗ trợ định dạng .PDF và .DOCX (Chọn được nhiều file cùng lúc)</p>
+                <input type="file" id="batchFileInput" name="cv_files" multiple accept=".pdf,.docx" class="hidden" onchange="handleFileSelection(this)">
+            </div>
+
+            <!-- Selected Files List Preview -->
+            <div id="fileListPreview" class="hidden max-h-36 overflow-y-auto space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Tệp đã chọn:</span>
+                <div id="fileListItems"></div>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-800 flex items-start space-x-2">
+                <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Hệ thống sẽ tự động bóc tách thông tin, quét kỹ năng và tính điểm đa tiêu chí Sentence-BERT cho từng hồ sơ. Quá trình có thể mất vài giây tùy số lượng tệp.</span>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-2 border-t border-slate-100">
+                <button type="button" onclick="closeUploadModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition">
+                    Hủy bỏ
+                </button>
+                <button type="submit" id="btnSubmitUpload" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-200 transition flex items-center">
+                    <span>🚀 Bắt Đầu Đánh Giá AI</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // -------------------------------------------------------------
+    // MODAL HANDLERS
+    // -------------------------------------------------------------
+    function openUploadModal() {
+        const modal = document.getElementById('batchUploadModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeUploadModal() {
+        const modal = document.getElementById('batchUploadModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    function handleFileSelection(input) {
+        const preview = document.getElementById('fileListPreview');
+        const items = document.getElementById('fileListItems');
+        items.innerHTML = '';
+        if (input.files && input.files.length > 0) {
+            preview.classList.remove('hidden');
+            for (let i = 0; i < input.files.length; i++) {
+                const f = input.files[i];
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between text-slate-700 py-0.5';
+                item.innerHTML = `<span class="truncate font-medium text-xs">📄 ${f.name}</span><span class="text-[10px] text-slate-400 shrink-0 ml-2">(${(f.size / 1024).toFixed(1)} KB)</span>`;
+                items.appendChild(item);
+            }
+        } else {
+            preview.classList.add('hidden');
+        }
+    }
+
+    function handleBatchUploadSubmit(form) {
+        const input = document.getElementById('batchFileInput');
+        if (!input.files || input.files.length === 0) {
+            alert('Vui lòng chọn ít nhất một tệp CV để tải lên!');
+            return false;
+        }
+        const btn = document.getElementById('btnSubmitUpload');
+        btn.disabled = true;
+        btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Đang phân tích AI...`;
+        return true;
+    }
+
+    // -------------------------------------------------------------
+    // BULK SELECTION & ACTIONS
+    // -------------------------------------------------------------
+    function getCheckboxes() {
+        return document.querySelectorAll('.candidate-item-checkbox');
+    }
+
+    function syncSelectedCount() {
+        const cbs = getCheckboxes();
+        let count = 0;
+        cbs.forEach(cb => {
+            const row = cb.closest('.candidate-row');
+            if (cb.checked) {
+                count++;
+                if (row) row.classList.add('ring-2', 'ring-indigo-400', 'bg-indigo-50/20');
+            } else {
+                if (row) row.classList.remove('ring-2', 'ring-indigo-400', 'bg-indigo-50/20');
+            }
+        });
+        document.getElementById('selectedCountBadge').innerText = count;
+
+        const selectAllCb = document.getElementById('selectAllCheckbox');
+        if (selectAllCb) {
+            selectAllCb.checked = (cbs.length > 0 && count === cbs.length);
+        }
+    }
+
+    function toggleSelectAll(master) {
+        const cbs = getCheckboxes();
+        cbs.forEach(cb => {
+            cb.checked = master.checked;
+        });
+        syncSelectedCount();
+    }
+
+    function selectTopN(n) {
+        const cbs = getCheckboxes();
+        cbs.forEach((cb, index) => {
+            cb.checked = (index < n);
+        });
+        syncSelectedCount();
+    }
+
+    function selectHighMatch() {
+        const cbs = getCheckboxes();
+        cbs.forEach(cb => {
+            const score = parseFloat(cb.getAttribute('data-score')) || 0;
+            cb.checked = (score >= 70.0);
+        });
+        syncSelectedCount();
+    }
+
+    function deselectAll() {
+        const cbs = getCheckboxes();
+        cbs.forEach(cb => { cb.checked = false; });
+        const selectAllCb = document.getElementById('selectAllCheckbox');
+        if (selectAllCb) selectAllCb.checked = false;
+        syncSelectedCount();
+    }
+
+    function submitBulkAction(form) {
+        const cbs = getCheckboxes();
+        const selected = [];
+        cbs.forEach(cb => {
+            if (cb.checked) selected.push(cb.value);
+        });
+
+        if (selected.length === 0) {
+            alert('Vui lòng chọn ít nhất một hồ sơ ứng viên để thực hiện thao tác duyệt hàng loạt!');
+            return false;
+        }
+
+        const hiddenContainer = document.getElementById('bulkHiddenInputs');
+        hiddenContainer.innerHTML = '';
+        selected.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'application_ids';
+            input.value = id;
+            hiddenContainer.appendChild(input);
+        });
+
+        const selectElem = document.getElementById('bulkStatusSelect');
+        const statusText = selectElem.options[selectElem.selectedIndex].text;
+        return confirm(`Bạn có chắc chắn muốn thực hiện "${statusText}" cho ${selected.length} hồ sơ đã chọn không?`);
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeUploadModal();
+        }
+    });
+</script>
+{% endblock %}

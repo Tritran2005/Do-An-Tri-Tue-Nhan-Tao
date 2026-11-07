@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thông Báo Trạng Thái Ứng Tuyển - AI Recruitment Portal</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f5f9; margin: 0; padding: 0; }
+    .container { max-width: 620px; margin: 30px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.10); }
+    .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 32px 36px; text-align: center; }
+    .header h1 { color: #fff; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    .header p { color: #c7d2fe; margin: 6px 0 0 0; font-size: 13px; }
+    .body { padding: 32px 36px; }
+    .greeting { font-size: 16px; color: #1e293b; margin-bottom: 16px; }
+    .status-box { border-radius: 10px; padding: 20px 24px; margin: 20px 0; text-align: center; }
+    .status-accepted { background: #ecfdf5; border: 2px solid #34d399; }
+    .status-rejected { background: #fff1f2; border: 2px solid #fb7185; }
+    .status-reviewed { background: #eff6ff; border: 2px solid #60a5fa; }
+    .status-pending  { background: #fefce8; border: 2px solid #fbbf24; }
+    .status-icon { font-size: 36px; margin-bottom: 8px; }
+    .status-label { font-size: 18px; font-weight: 700; color: #1e293b; }
+    .score-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 20px 0; }
+    .score-card h3 { margin: 0 0 12px 0; font-size: 14px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .score-bar-wrap { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
+    .score-bar-label { width: 110px; font-size: 12px; color: #64748b; flex-shrink: 0; }
+    .score-bar-bg { flex: 1; background: #e2e8f0; border-radius: 99px; height: 8px; }
+    .score-bar-fill { height: 8px; border-radius: 99px; background: #6366f1; }
+    .score-val { width: 36px; font-size: 12px; font-weight: 700; color: #1e293b; text-align: right; flex-shrink: 0; }
+    .skills-section { margin: 20px 0; }
+    .skills-section h4 { font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 8px 0; }
+    .chip { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; margin: 3px; }
+    .chip-matched { background: #dcfce7; color: #16a34a; }
+    .chip-missing { background: #fee2e2; color: #dc2626; }
+    .coach-tip { background: linear-gradient(135deg, #eff6ff, #eef2ff); border-left: 4px solid #6366f1; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 20px 0; font-size: 13px; color: #3730a3; }
+    .coach-tip strong { display: block; margin-bottom: 4px; font-size: 13px; color: #4338ca; }
+    .cta { text-align: center; margin: 24px 0 8px 0; }
+    .cta a { display: inline-block; background: #4f46e5; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 700; font-size: 14px; }
+    .footer { background: #f8fafc; padding: 18px 36px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <!-- HEADER -->
+  <div class="header">
+    <h1>🤖 AI Recruitment Portal</h1>
+    <p>Hệ thống Tuyển Dụng Thông Minh</p>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+    <p class="greeting">Xin chào <strong>{{ candidate_name }}</strong>,</p>
+    <p style="color:#475569; font-size:14px; margin:0 0 16px 0;">
+      Hồ sơ ứng tuyển vị trí <strong>{{ job_title }}</strong> của bạn tại
+      <strong>{{ company_name }}</strong> vừa được cập nhật trạng thái mới.
+    </p>
+
+    <!-- STATUS BOX -->
+    <div class="status-box status-{{ status_code }}">
+      <div class="status-icon">{{ status_icon }}</div>
+      <div class="status-label">{{ status_label }}</div>
+      <p style="margin: 6px 0 0 0; font-size: 13px; color: #64748b;">{{ status_message }}</p>
+    </div>
+
+    <!-- AI SCORE CARD -->
+    {% if ai_score > 0 %}
+    <div class="score-card">
+      <h3>📊 Điểm AI Đánh Giá Hồ Sơ</h3>
+      <div class="score-bar-wrap">
+        <span class="score-bar-label">Điểm tổng hợp</span>
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:{{ ai_score }}%"></div></div>
+        <span class="score-val">{{ ai_score }}%</span>
+      </div>
+      <div class="score-bar-wrap">
+        <span class="score-bar-label">Kỹ năng</span>
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:{{ skill_score }}%; background:#10b981"></div></div>
+        <span class="score-val">{{ skill_score }}%</span>
+      </div>
+      <div class="score-bar-wrap">
+        <span class="score-bar-label">Ngữ nghĩa BERT</span>
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:{{ semantic_score }}%; background:#8b5cf6"></div></div>
+        <span class="score-val">{{ semantic_score }}%</span>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- MATCHED / MISSING SKILLS -->
+    {% if matched_skills %}
+    <div class="skills-section">
+      <h4>✅ Kỹ năng phù hợp ({{ matched_skills|length }})</h4>
+      {% for skill in matched_skills %}
+        <span class="chip chip-matched">{{ skill }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if missing_skills %}
+    <div class="skills-section">
+      <h4>📌 Kỹ năng cần bổ sung ({{ missing_skills|length }})</h4>
+      {% for skill in missing_skills %}
+        <span class="chip chip-missing">{{ skill }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- AI CAREER COACH TIP -->
+    {% if coach_tip %}
+    <div class="coach-tip">
+      <strong>💡 Lời khuyên từ AI Career Coach:</strong>
+      {{ coach_tip }}
+    </div>
+    {% endif %}
+
+    <!-- CTA BUTTON -->
+    <div class="cta">
+      <a href="{{ site_url }}{% url 'jobs:application_detail' application_id %}">Xem chi tiết hồ sơ ứng tuyển</a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <p>Email này được gửi tự động bởi <strong>AI Recruitment Portal</strong>. Vui lòng không phản hồi trực tiếp email này.</p>
+    <p>© 2025 AI Recruitment Portal. Hệ thống tuyển dụng thông minh thế hệ mới.</p>
+  </div>
+</div>
+</body>
+</html>
+

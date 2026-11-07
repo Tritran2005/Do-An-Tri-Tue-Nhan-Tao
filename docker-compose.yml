@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  # ==============================================================================
+  # 1. CƠ SỞ DỮ LIỆU MYSQL 8.0
+  # ==============================================================================
+  db:
+    image: mysql:8.0
+    container_name: ai_recruitment_mysql
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: ai_recruitment_db
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ==============================================================================
+  # 2. HÀNG ĐỢI REDIS (Broker & Result Backend cho Celery)
+  # ==============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: ai_recruitment_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ==============================================================================
+  # 3. MÁY CHỦ DJANGO WEB APPLICATION
+  # ==============================================================================
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai_recruitment_web
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+      - media_data:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_NAME=ai_recruitment_db
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_HOST=db
+      - DB_PORT=3306
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ENABLE_ASYNC_CELERY=True
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ==============================================================================
+  # 4. CELERY BACKGROUND WORKER (Chấm điểm AI bất đồng bộ)
+  # ==============================================================================
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai_recruitment_celery_worker
+    restart: unless-stopped
+    command: celery -A config worker --loglevel=info --concurrency=2
+    volumes:
+      - .:/app
+      - media_data:/app/media
+    environment:
+      - DB_NAME=ai_recruitment_db
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_HOST=db
+      - DB_PORT=3306
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ENABLE_ASYNC_CELERY=True
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
+  redis_data:
+  media_data:
+
