@@ -124,16 +124,14 @@ d:\DDTTNT/
 │   ├── base.html              # Layout khung chuẩn, Sidebar điều hướng, Thông báo Toast Messages
 │   ├── jobs/                  # Giao diện Sàn việc làm, HR Ranking Board, Multi-Job Screening, Application Detail
 │   └── accounts/              # Giao diện Đăng nhập, Đăng ký phân quyền
-├── sample_cvs/                # Bộ 5 CV mẫu thực nghiệm chuẩn (AI Engineer, Fullstack, Backend, Fresher, Frontend)
+├── sample_cvs/                # Bộ 10 CV mẫu thực nghiệm chuẩn đa chuyên ngành IT
 ├── config/                    # Cấu hình trung tâm Django, MySQL, Celery
 │   ├── settings.py            # Cấu hình Database MySQL, Celery Broker, Media/Static
 │   └── celery.py              # Khởi tạo Celery Application
-├── test_sample_cvs.py         # Kịch bản kiểm thử tự động 5 CV mẫu trên 2 đề bài tuyển dụng thực tế
 ├── seed_hr_demo.py            # Kịch bản khởi tạo tự động dữ liệu demo (3 tài khoản, 3 JD, 8 ứng viên)
 ├── Dockerfile                 # Đóng gói image Docker (Python 3.11, Tesseract OCR, MySQL libs)
 ├── docker-compose.yml         # Điều phối 4 container (Django Web, MySQL 8.0, Redis 7, Celery Worker)
 ├── requirements.txt           # Danh mục toàn bộ thư viện phụ thuộc
-├── BFD_DIAGRAM.md             # Sơ đồ phân cấp chức năng BFD chuẩn hóa (26 chức năng, 6 phân hệ)
 ├── NEWS_SYSTEM_DIAGRAMS.md    # Toàn bộ thiết kế hệ thống (Use Case, BFD, IFD, DFD, ERD, Class Diagram)
 └── README.md                  # TÀI LIỆU TOÀN DIỆN DUY NHẤT CỦA DỰ ÁN
 ```
