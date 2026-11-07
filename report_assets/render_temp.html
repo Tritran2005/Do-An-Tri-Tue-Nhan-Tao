@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="file:///d:/DDTTNT/report_assets/mermaid.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 25px;
+            background: #ffffff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        #diagram {
+            width: 1300px;
+            background: #ffffff;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        svg {
+            width: 100% !important;
+            height: auto !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="diagram" class="mermaid">
+classDiagram
+    class User {
+        +int id
+        +String username
+        +String password
+        +String email
+        +String first_name
+        +String last_name
+        +String role
+        +String phone_number
+        +String company_name
+        +bool is_active
+        +bool is_admin()
+        +bool is_candidate()
+        +bool is_hr()
+        +String __str__()
+    }
+
+    class JobPosting {
+        +int id
+        +User hr
+        +String title
+        +String description
+        +String required_skills
+        +int min_experience
+        +String location
+        +String salary_range
+        +String job_type
+        +bool is_active
+        +DateTime created_at
+        +DateTime updated_at
+        +List get_skills_list()
+        +String __str__()
+    }
+
+    class Application {
+        +int id
+        +JobPosting job
+        +User candidate
+        +String cv_file
+        +String parsed_text
+        +List extracted_skills
+        +String extracted_email
+        +String extracted_phone
+        +float match_score
+        +float total_score
+        +float skill_score
+        +float semantic_score
+        +float experience_score
+        +float education_score
+        +List matched_skills
+        +List missing_skills
+        +bool keyword_stuffing_flag
+        +String status
+        +String cv_file_path()
+        +String contact_email()
+        +String contact_phone()
+        +save()
+        +String __str__()
+    }
+
+    class AIParser {
+        +extract_text_from_pdf(file_path)
+        +extract_text_from_docx(file_path)
+        +extract_text_from_image_ocr(file_path)
+        +extract_text_from_pdf_ocr_fallback(file_path)
+        +extract_text_from_file(file_path)
+    }
+
+    class AIExtractor {
+        +List SKILL_TAXONOMY
+        +extract_skills(text)
+        +extract_contact_info(text)
+        +extract_candidate_name(text)
+        +extract_work_experience_entries(text)
+    }
+
+    class AIMatcher {
+        -model SentenceTransformer
+        +calculate_semantic_similarity(jd_text, cv_text)
+        +match_skills(jd_skills, cv_skills)
+        +get_matched_skills(jd_skills, cv_skills)
+        +get_missing_skills(jd_skills, cv_skills)
+    }
+
+    class AIEvaluator {
+        +evaluate_candidate_application(jd, application)
+        +calculate_skill_score(jd_skills, cv_skills)
+        +calculate_experience_score(text, min_exp)
+        +calculate_education_score(text)
+        +detect_keyword_stuffing(cv_skills, semantic_score)
+    }
+
+    User "1" --> "0..*" JobPosting : đăng tin (HR)
+    User "1" --> "0..*" Application : nộp hồ sơ (Candidate)
+    JobPosting "1" --> "0..*" Application : có hồ sơ
+    Application --> AIParser : sử dụng
+    Application --> AIExtractor : sử dụng
+    Application --> AIMatcher : sử dụng
+    Application --> AIEvaluator : sử dụng
+    AIEvaluator --> AIMatcher : gọi
+    </div>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                fontFamily: 'Segoe UI, Arial, sans-serif',
+                fontSize: '14px',
+                primaryColor: '#e8f0fe',
+                primaryBorderColor: '#1a73e8',
+                primaryTextColor: '#174ea6',
+                lineColor: '#5f6368',
+                secondaryColor: '#f1f3f4',
+                tertiaryColor: '#ffffff'
+            }
+        });
+    </script>
+</body>
+</html>
