@@ -133,6 +133,7 @@ d:\DDTTNT/
 ├── Dockerfile                 # Đóng gói image Docker (Python 3.11, Tesseract OCR, MySQL libs)
 ├── docker-compose.yml         # Điều phối 4 container (Django Web, MySQL 8.0, Redis 7, Celery Worker)
 ├── requirements.txt           # Danh mục toàn bộ thư viện phụ thuộc
+├── BFD_DIAGRAM.md             # Sơ đồ phân cấp chức năng BFD chuẩn hóa (26 chức năng, 6 phân hệ)
 └── README.md                  # TÀI LIỆU TOÀN DIỆN DUY NHẤT CỦA DỰ ÁN
 ```
 
@@ -236,6 +237,61 @@ $$S_{\text{total}} = 0.35 \times S_{\text{skill}} + 0.25 \times S_{\text{semanti
 ---
 
 ## 4. CÁC PHÂN HỆ CHỨC NĂNG & TRẢI NGHIỆM NGƯỜI DÙNG
+
+### 4.0. Sơ đồ phân cấp chức năng (BFD – Business Function Diagram)
+
+> 📑 *Xem chi tiết phân rã toàn diện tại tài liệu riêng:* [BFD_DIAGRAM.md](file:///d:/DDTTNT/BFD_DIAGRAM.md)
+
+```mermaid
+flowchart TD
+    ROOT["PHÂN TÍCH THIẾT KẾ HỆ THỐNG<br/><b>SÀNG LỌC & ĐÁNH GIÁ CV BẰNG TRÍ TUỆ NHÂN TẠO</b>"]
+
+    M1["1. Quản lý tài khoản"]
+    M2["2. Quản lý tin tuyển dụng"]
+    M3["3. Phân tích CV bằng AI"]
+    M4["4. Cổng ứng viên"]
+    M5["5. Cổng nhà tuyển dụng"]
+    M6["6. Quản trị hệ thống"]
+
+    ROOT --> M1
+    ROOT --> M2
+    ROOT --> M3
+    ROOT --> M4
+    ROOT --> M5
+    ROOT --> M6
+
+    M1 --> F11["1.1 Đăng ký tài khoản"]
+    M1 --> F12["1.2 Đăng nhập / Đăng xuất"]
+    M1 --> F13["1.3 Chỉnh sửa hồ sơ cá nhân"]
+    M1 --> F14["1.4 Phân quyền RBAC 3 cấp"]
+
+    M2 --> F21["2.1 Tạo tin tuyển dụng (JD)"]
+    M2 --> F22["2.2 Chỉnh sửa / Xóa tin đăng"]
+    M2 --> F23["2.3 Cấu hình bộ trọng số yêu cầu"]
+    M2 --> F24["2.4 Kích hoạt / Ẩn tin đăng"]
+
+    M3 --> F31["3.1 Trích xuất văn bản CV (Parser + OCR)"]
+    M3 --> F32["3.2 Nhận diện kỹ năng IT (80+ Taxonomy)"]
+    M3 --> F33["3.3 Tính điểm S-BERT Semantic Matching"]
+    M3 --> F34["3.4 Chấm điểm 4 quy tắc S_total"]
+    M3 --> F35["3.5 Phát hiện Keyword Stuffing"]
+
+    M4 --> F41["4.1 Xem danh sách việc làm"]
+    M4 --> F42["4.2 Nộp CV ứng tuyển"]
+    M4 --> F43["4.3 Xem kết quả AI & AI Coach"]
+    M4 --> F44["4.4 Theo dõi hồ sơ đã nộp"]
+
+    M5 --> F51["5.1 HR Dashboard (Thống kê)"]
+    M5 --> F52["5.2 Bảng xếp hạng ứng viên AI"]
+    M5 --> F53["5.3 Sàng lọc đa tiêu chí"]
+    M5 --> F54["5.4 Tải CV hàng loạt"]
+    M5 --> F55["5.5 Xuất báo cáo Excel / CSV"]
+
+    M6 --> F61["6.1 Quản lý người dùng"]
+    M6 --> F62["6.2 Django Admin Portal"]
+    M6 --> F63["6.3 Giám sát hàng đợi Celery"]
+    M6 --> F64["6.4 Cấu hình hệ thống"]
+```
 
 ### 4.1. Cổng Nhà Tuyển Dụng (HR Recruiter Portal)
 1. **Bảng điều khiển tổng quan (HR Dashboard):** Thống kê số tin tuyển dụng đang mở, tổng số CV tiếp nhận, phân loại trạng thái ứng viên (Chờ duyệt, Đã xem, Chấp thuận, Từ chối).
