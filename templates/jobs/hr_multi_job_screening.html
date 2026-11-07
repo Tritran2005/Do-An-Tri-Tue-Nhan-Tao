@@ -222,13 +222,18 @@
                                 <!-- Best Fit Recommendation -->
                                 <td class="py-4 px-4 text-center bg-indigo-50/40 align-middle">
                                     {% if row.best_job %}
-                                        <div class="space-y-1">
-                                            <span class="font-black text-indigo-900 text-xs block">
-                                                {{ row.best_job.title }}
-                                            </span>
+                                        <div class="space-y-1.5">
+                                            <a href="{% url 'jobs:hr_job_candidates' row.best_job.id %}" class="font-black text-indigo-700 hover:text-indigo-900 text-xs block hover:underline" title="Nhấn để xem Bảng xếp hạng ứng viên của vị trí này">
+                                                {{ row.best_job.title }} ↗
+                                            </a>
                                             <span class="inline-block px-2.5 py-0.5 rounded-full bg-emerald-600 text-white font-bold text-xs">
                                                 Điểm: {{ row.best_score }}%
                                             </span>
+                                            <div>
+                                                <a href="{% url 'jobs:hr_job_candidates' row.best_job.id %}" class="inline-flex items-center text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 bg-white border border-indigo-200 px-2.5 py-1 rounded-lg shadow-sm hover:bg-indigo-50 transition">
+                                                    Xem Xếp Hạng →
+                                                </a>
+                                            </div>
                                         </div>
                                     {% endif %}
                                 </td>

@@ -17,7 +17,7 @@ from accounts.views import hr_required, candidate_required
 from .models import JobPosting, Application
 from .forms import JobPostingForm, ApplicationForm
 from ai_engine.parser import extract_text_from_file
-from ai_engine.extractor import extract_skills, extract_contact_info
+from ai_engine.extractor import extract_skills, extract_contact_info, extract_candidate_name
 from ai_engine.evaluator import evaluate_candidate_application
 
 logger = logging.getLogger(__name__)
@@ -562,53 +562,64 @@ def hr_batch_upload_cvs_view(request, pk):
                     error_count += 1
                     continue
 
-                # 2. Xử lý tên ứng viên từ tên tệp (ví dụ: CV_01_Nguyen_Van_An_Senior.pdf -> Nguyen Van An)
+                # 2. Xử lý tên ứng viên từ tên tệp (hỗ trợ cả dấu _ và -)
                 base_name = os.path.splitext(file_obj.name)[0]
                 clean_name = re.sub(r'^CV[_-]?\d*[_-]?', '', base_name, flags=re.IGNORECASE)
-                parts = clean_name.replace('_', ' ').split()
-                if len(parts) >= 2:
-                    full_name = ' '.join(parts[:3])
+                clean_name = clean_name.replace('_', ' ').replace('-', ' ').strip()
+                file_parts = clean_name.split()
+                if len(file_parts) >= 2:
+                    fallback_name = ' '.join(file_parts[:3])
                 else:
-                    full_name = clean_name.replace('_', ' ')
+                    fallback_name = clean_name or 'Ung vien'
 
-                slug_name = re.sub(r'[^a-zA-Z0-9]', '', full_name.lower())[:15] or 'candidate'
-                candidate_email = f"{slug_name}@candidate.local"
+                # Tạo tài khoản candidate duy nhất cho mỗi hồ sơ để tránh trùng lặp ghi đè
+                unique_suffix = uuid.uuid4().hex[:6]
+                slug_name = re.sub(r'[^a-zA-Z0-9]', '', clean_name.lower())[:15] or 'candidate'
+                username_candidate = f"{slug_name}_{unique_suffix}"
+                temp_email = f"{username_candidate}@candidate.local"
 
                 User = get_user_model()
-                candidate_user = User.objects.filter(email=candidate_email).first()
-                if not candidate_user:
-                    username_candidate = f"{slug_name}_{uuid.uuid4().hex[:4]}"
-                    candidate_user = User.objects.create_user(
-                        username=username_candidate,
-                        email=candidate_email,
-                        password=secrets.token_urlsafe(16),
-                        role=User.ROLE_CANDIDATE,
-                        first_name=parts[-1] if parts else full_name,
-                        last_name=' '.join(parts[:-1]) if len(parts) > 1 else ''
-                    )
+                candidate_user = User.objects.create_user(
+                    username=username_candidate,
+                    email=temp_email,
+                    password=secrets.token_urlsafe(16),
+                    role=User.ROLE_CANDIDATE,
+                    first_name=file_parts[-1] if file_parts else fallback_name,
+                    last_name=' '.join(file_parts[:-1]) if len(file_parts) > 1 else ''
+                )
 
-                # 3. Tạo hoặc lấy Application
-                application, created = Application.objects.get_or_create(
+                # 3. Tạo Application độc lập
+                application = Application.objects.create(
                     job=job,
                     candidate=candidate_user,
-                    defaults={'status': Application.STATUS_PENDING}
+                    status=Application.STATUS_PENDING,
+                    cv_file=file_obj
                 )
-                application.cv_file = file_obj
-                application.save()
 
                 # 4. Trích xuất text từ CV
                 raw_text = extract_text_from_file(application.cv_file.path)
                 application.parsed_text = raw_text
 
-                # 5. Bóc tách kỹ năng & thông tin liên hệ từ CV
+                # 5. Bóc tách kỹ năng, thông tin liên hệ và tên ứng viên từ CV
                 extracted_skills = extract_skills(raw_text)
                 application.extracted_skills = extracted_skills
 
                 contact_info = extract_contact_info(raw_text)
-                if contact_info.get('email'):
-                    application.extracted_email = contact_info['email']
+                real_email = contact_info.get('email')
+                if real_email:
+                    application.extracted_email = real_email
                 if contact_info.get('phone'):
                     application.extracted_phone = contact_info['phone']
+
+                # Bóc tách tên thật từ nội dung CV nếu có
+                real_name = extract_candidate_name(raw_text)
+                if real_name and len(real_name.strip()) >= 3 and not re.search(r'(template|resume|curriculum)', real_name, re.IGNORECASE):
+                    name_words = real_name.strip().split()
+                    candidate_user.first_name = name_words[-1] if len(name_words) > 1 else real_name.strip()
+                    candidate_user.last_name = ' '.join(name_words[:-1]) if len(name_words) > 1 else ''
+                    if real_email and not User.objects.filter(email=real_email).exclude(id=candidate_user.id).exists():
+                        candidate_user.email = real_email
+                    candidate_user.save()
 
 
                 # 6. Đánh giá đa tiêu chí & Sentence-BERT
@@ -934,47 +945,55 @@ def hr_multi_job_screening_view(request):
                 if ext not in ['.pdf', '.docx']:
                     continue
 
-                # 1. Trích xuất tên ứng viên & email từ tên tệp
-                base_name = os.path.splitext(file_obj.name)[0]
-                clean_name = re.sub(r'^CV[_-]?\d*[_-]?', '', base_name, flags=re.IGNORECASE)
-                parts = clean_name.replace('_', ' ').split()
-                if len(parts) >= 2:
-                    full_name = ' '.join(parts[:3])
-                else:
-                    full_name = clean_name.replace('_', ' ') or 'Ung vien'
+                # 1. Trích xuất văn bản CV thông qua file tạm
+                import tempfile
+                file_content = file_obj.read()
+                file_obj.seek(0)
+                with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+                    tmp.write(file_content)
+                    tmp_path = tmp.name
 
-                slug_name = re.sub(r'[^a-zA-Z0-9]', '', full_name.lower())[:15] or 'candidate'
-                candidate_email = f"{slug_name}@candidate.local"
+                try:
+                    raw_text = extract_text_from_file(tmp_path)
+                finally:
+                    if os.path.exists(tmp_path):
+                        os.remove(tmp_path)
 
-                candidate_user = User.objects.filter(email=candidate_email).first()
-                if not candidate_user:
-                    username_candidate = f"{slug_name}_{uuid.uuid4().hex[:4]}"
-                    candidate_user = User.objects.create_user(
-                        username=username_candidate,
-                        email=candidate_email,
-                        password=secrets.token_urlsafe(16),
-                        role=User.ROLE_CANDIDATE,
-                        first_name=parts[-1] if parts else full_name,
-                        last_name=' '.join(parts[:-1]) if len(parts) > 1 else ''
-                    )
-
-                first_job = selected_jobs[0]
-                temp_app, _ = Application.objects.get_or_create(
-                    job=first_job,
-                    candidate=candidate_user,
-                    defaults={'status': Application.STATUS_PENDING}
-                )
-                temp_app.cv_file = file_obj
-                temp_app.save()
-
-                raw_text = extract_text_from_file(temp_app.cv_file.path)
                 extracted_skills = extract_skills(raw_text)
                 contact_info = extract_contact_info(raw_text)
-                if contact_info.get('email'):
-                    temp_app.extracted_email = contact_info['email']
-                if contact_info.get('phone'):
-                    temp_app.extracted_phone = contact_info['phone']
-                temp_app.save()
+                real_email = contact_info.get('email')
+
+                # Bóc tách tên ứng viên: ưu tiên tên thực tế trong nội dung CV, sau đó từ tên file
+                base_name = os.path.splitext(file_obj.name)[0]
+                clean_name = re.sub(r'^CV[_-]?\d*[_-]?', '', base_name, flags=re.IGNORECASE)
+                clean_name = clean_name.replace('_', ' ').replace('-', ' ').strip()
+                file_parts = clean_name.split()
+                fallback_name = ' '.join(file_parts[:3]) if len(file_parts) >= 2 else (clean_name or 'Ung vien')
+
+                real_name = extract_candidate_name(raw_text)
+                if real_name and len(real_name.strip()) >= 3 and not re.search(r'(template|resume|curriculum)', real_name, re.IGNORECASE):
+                    display_name = real_name.strip()
+                else:
+                    display_name = fallback_name
+
+                name_words = display_name.split()
+                first_name = name_words[-1] if name_words else display_name
+                last_name = ' '.join(name_words[:-1]) if len(name_words) > 1 else ''
+
+                # Tạo tài khoản ứng viên độc lập cho từng hồ sơ
+                unique_suffix = uuid.uuid4().hex[:6]
+                slug_name = re.sub(r'[^a-zA-Z0-9]', '', clean_name.lower())[:15] or 'candidate'
+                username_candidate = f"{slug_name}_{unique_suffix}"
+                temp_email = f"{username_candidate}@candidate.local"
+
+                candidate_user = User.objects.create_user(
+                    username=username_candidate,
+                    email=real_email if (real_email and not User.objects.filter(email=real_email).exists()) else temp_email,
+                    password=secrets.token_urlsafe(16),
+                    role=User.ROLE_CANDIDATE,
+                    first_name=first_name,
+                    last_name=last_name
+                )
 
                 # 2. Đánh giá chéo với TẤT CẢ các Job đã chọn
                 job_evaluations = []
@@ -999,29 +1018,27 @@ def hr_multi_job_screening_view(request):
                         best_job = job
                         best_eval = eval_result
 
-                # 3. Ghi nhận hồ sơ ứng tuyển vào vị trí Phù hợp nhất (Best Fit)
+                # 3. Ghi nhận hồ sơ ứng tuyển trực tiếp vào vị trí Phù hợp nhất (Best Fit)
                 if best_job and best_eval:
-                    best_app, created = Application.objects.get_or_create(
+                    best_app = Application.objects.create(
                         job=best_job,
                         candidate=candidate_user,
-                        defaults={'status': Application.STATUS_PENDING}
+                        status=Application.STATUS_PENDING,
+                        cv_file=file_obj,
+                        parsed_text=raw_text,
+                        extracted_skills=extracted_skills,
+                        extracted_email=real_email or '',
+                        extracted_phone=contact_info.get('phone') or '',
+                        match_score=best_eval["total_score"],
+                        total_score=best_eval["total_score"],
+                        skill_score=best_eval["scores"]["skill_score"],
+                        semantic_score=best_eval["scores"]["semantic_score"],
+                        experience_score=best_eval["scores"]["experience_score"],
+                        education_score=best_eval["scores"]["education_score"],
+                        matched_skills=best_eval["skills_breakdown"]["matched_skills"],
+                        missing_skills=best_eval["skills_breakdown"]["missing_skills"],
+                        keyword_stuffing_flag=best_eval.get("keyword_stuffing", {}).get("detected", False)
                     )
-                    best_app.cv_file = file_obj
-                    best_app.parsed_text = raw_text
-                    best_app.extracted_skills = extracted_skills
-                    if contact_info.get('email'):
-                        best_app.extracted_email = contact_info['email']
-                    if contact_info.get('phone'):
-                        best_app.extracted_phone = contact_info['phone']
-                    best_app.match_score = best_eval["total_score"]
-                    best_app.total_score = best_eval["total_score"]
-                    best_app.skill_score = best_eval["scores"]["skill_score"]
-                    best_app.semantic_score = best_eval["scores"]["semantic_score"]
-                    best_app.experience_score = best_eval["scores"]["experience_score"]
-                    best_app.education_score = best_eval["scores"]["education_score"]
-                    best_app.matched_skills = best_eval["skills_breakdown"]["matched_skills"]
-                    best_app.missing_skills = best_eval["skills_breakdown"]["missing_skills"]
-                    best_app.save()
 
                 # 4. Xây dựng Dữ liệu Ma trận Chấm Điểm Chéo
                 scores_by_job = {}
@@ -1041,8 +1058,8 @@ def hr_multi_job_screening_view(request):
                 job_scores_list = [scores_by_job.get(job.id) for job in selected_jobs]
 
                 matrix_data.append({
-                    'candidate_name': full_name,
-                    'email': contact_info.get('email') or candidate_email,
+                    'candidate_name': display_name,
+                    'email': real_email or temp_email,
                     'phone': contact_info.get('phone') or '',
                     'cv_filename': file_obj.name,
                     'job_scores_list': job_scores_list,
@@ -1056,7 +1073,7 @@ def hr_multi_job_screening_view(request):
                 matrix_data.sort(key=lambda x: x['best_score'], reverse=True)
                 messages.success(
                     request,
-                    f"🎉 Phân tích AI thành công {processed_count} CV cho {len(selected_jobs)} vị trí công việc! Ma trận so khớp hiển thị bên dưới."
+                    f"🎉 Phân tích AI thành công {processed_count} CV! Hồ sơ đã được tự động lưu vào Bảng xếp hạng AI của vị trí Phù Hợp Nhất (Best Fit)."
                 )
 
     return render(request, 'jobs/hr_multi_job_screening.html', {
