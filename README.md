@@ -134,6 +134,7 @@ d:\DDTTNT/
 ├── docker-compose.yml         # Điều phối 4 container (Django Web, MySQL 8.0, Redis 7, Celery Worker)
 ├── requirements.txt           # Danh mục toàn bộ thư viện phụ thuộc
 ├── BFD_DIAGRAM.md             # Sơ đồ phân cấp chức năng BFD chuẩn hóa (26 chức năng, 6 phân hệ)
+├── NEWS_SYSTEM_DIAGRAMS.md    # Toàn bộ thiết kế hệ thống (Use Case, BFD, IFD, DFD, ERD, Class Diagram)
 └── README.md                  # TÀI LIỆU TOÀN DIỆN DUY NHẤT CỦA DỰ ÁN
 ```
 
